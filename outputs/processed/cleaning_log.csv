@@ -1,0 +1,26 @@
+method,table,column,description,reason,notes
+conversion,movies,release_date,object to datetime64 (errors=coerce),enable date filtering and pandas date features,"no NaT. min date is 1902-09-01, max date is 2016-09-23"
+conversion,movies,vote_count,float64 to Int64,show as whole number,no NaN. 44 movies have no votes
+conversion,movies,budget,int64 to float64,match revenue dtype,no NaN. 48.9% of movies have 0 budget
+conversion,movies,primary_genre,object to category,few unique values,20 unique values
+conversion,movies,status,object to category,few unique values,4 unique values
+conversion,movies,original_language,object to category,few unique values,42 unique values
+aggregation,ratings_aggregated,"rating, userId, rating_datetime",grouped ratings metrics by movieId,transform to 1 row per movie,"reduced rows from 99,810 to 9,025"
+derivation,ratings_aggregated,rating_threshold_met,created rating success flag,can be used for filtering or probability analysis,some flags may lack reliable counts
+reshaping,movies,genres_list,split on | to create long data,one row per movie-genre pair,movie_genres table created kept separate from abt
+reshaping,credits,top_cast,split on | to create long data,one row per movie-actor pair,movie_cast table created kept separate from abt
+reshaping,keywords,keywords_list,split on | to create long data,one row per movie-keyword pair,movie_keywords table created kept separate from abt
+filter,movies_abt,status,filter to status = released,scope is released movies,21 movies dropped
+drop column,movies_abt,status,remove column,all are released,no value added
+drop column,movies_abt,original_title,remove column,will use title,redundant
+drop column,movies_abt,adult,remove column,all equal false,no value added
+drop column,movies_abt,production_companies,remove column,bringing production in-house,no value added
+drop column,movies_abt,production_countries,remove column,movies will be made in USA,no value added
+drop column,movies_abt,genres,remove column,prefer genre_list,redundant
+drop column,movies_abt,popularity,remove column,out of project scope,no value added
+derivation,movies_abt,roi,roi = (rev-budget)/budget,model 1 output: roi >= 1 = successful,NaN or inf where budget or revenue missing
+derivation,movies_abt,roi_threshold_met,if roi >= 1 then 1 else 0,simple success indicator,not calculated if roi is na
+filtering,movies_abt,budget,"budget > 10,000",remove budget outliers and missing budget data,"5,248 movies removed"
+filtering,movies_abt,revenue,"rev > 10,000",remove rev outliers and missing rev data,"5,248 movies removed"
+merge,"movies_abt, ratings_agg, credits, keywords",all,merging to abt,combine movie level data,
+derivation,movies_abt,release_month,release_month = month(release_date),can be used for seasonal release analysis,no isna values created
