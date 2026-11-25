@@ -1,0 +1,30 @@
+column_name,data_type,description,source,transformation_or_derivation,notes_or_concerns
+movieId,int64,Primary key for movies,movies table,none,All unique
+tmdbId,int64,Key that joins credits and keywords,movies table,none,All unique
+imdb_id,str,IMDb identifier,movies table,none,Not used
+title,str,Movie title,movies table,none,Duplicate titles exist; they are remakes or re-releases
+original_language,str,Original language of the movie,movies table,Converted object to category,Categorical data
+release_date,str,Movie release date,movies table,Converted object to datetime64 (errors='coerce'),No NaT after conversion; range 1902-09-01 to 2016-09-23
+runtime,float64,Movie runtime in minutes,movies table,none,Might be used as a feature
+budget,float64,Movie budget (USD),movies table,"Converted int64 to float64; filtered to > 10,000",Used for ROI calculation
+revenue,float64,Movie revenue (USD),movies table,"Filtered to > 10,000","Used for ROI calculation. Leakage: post-release; builds the ROI target, do not use as a predictor"
+vote_average,float64,TMDb average vote (10-point scale),movies table,none,Might be used as a target. Leakage: post-release; do not use as a predictor
+vote_count,int64,TMDb vote count,movies table,Converted float64 to Int64,More votes per movie than the MovieLens rating_count. Leakage: post-release; do not use as a predictor
+genres_list,str,Pipe-separated list of genres,movies table,none,Categorical feature
+primary_genre,str,Primary genre of the movie,movies table,Converted object to category,Categorical feature
+release_year,int64,Year of release,movies table,none,"Exploratory, not a feature"
+roi,float64,Movie's return on investment,derived,(revenue - budget) / budget,"ROI >= 1 is assumed success. Leakage: outcome, not known at planning; never a predictor"
+roi_threshold_met,int64,ROI success flag,derived,"roi >= 1 = 1, else 0","Primary target. Leakage: outcome, not known at planning; never a predictor"
+rating_count,float64,Number of MovieLens ratings,ratings table (MovieLens),Count of ratings grouped by movieId,Most movies have < 20 ratings. Leakage: post-release; do not use as a predictor
+avg_rating,float64,MovieLens mean rating (0.5-5 scale),ratings table (MovieLens),Mean rating grouped by movieId,"May be unreliable for movies with few ratings. Leakage: post-release; builds the rating target, do not use as a predictor"
+min_rating,float64,MovieLens minimum rating,ratings table (MovieLens),Min rating grouped by movieId,May be unreliable for movies with few ratings. Leakage: post-release; do not use as a predictor
+max_rating,float64,MovieLens maximum rating,ratings table (MovieLens),Max rating grouped by movieId,May be unreliable for movies with few ratings. Leakage: post-release; do not use as a predictor
+rating_std_dev,float64,Standard deviation of MovieLens ratings,ratings table (MovieLens),Std dev of rating grouped by movieId,May be unreliable for movies with few ratings. Leakage: post-release; do not use as a predictor
+distinct_users,float64,Number of unique users who rated the movie,ratings table (MovieLens),Distinct userId count grouped by movieId,Used to validate one rating per user per movie. Leakage: post-release; do not use as a predictor
+min_rating_date,str,Date of first MovieLens rating,ratings table (MovieLens),Min rating_datetime grouped by movieId,Kept for exploratory purposes. Leakage: post-release; do not use as a predictor
+max_rating_date,str,Date of most recent MovieLens rating,ratings table (MovieLens),Max rating_datetime grouped by movieId,Kept for exploratory purposes. Leakage: post-release; do not use as a predictor
+rating_threshold_met,float64,MovieLens rating success flag,derived,"avg_rating >= 4 = 1, else 0","Secondary target. Leakage: outcome, not known at planning; never a predictor"
+director,str,Movie director,credits table,Left merge on tmdbId,Kept for exploratory purposes
+top_cast,str,Pipe-separated list of top cast,credits table,Left merge on tmdbId,Good for exploration; might omit from features
+keywords_list,str,Pipe-separated list of content keywords,keywords table,Left merge on tmdbId,String to convert to dummy variables
+release_month,int64,Month of release (1-12),derived,release_date.dt.month,Categorical feature
